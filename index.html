@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ADEP - Sistema de Gestión de Inventario Ortopédico</title>
+    <!-- FontAwesome para Iconos -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- SheetJS para exportar Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --adep-green: #008751;
+            --adep-green-dark: #00683e;
+            --adep-red: #d32f2f;
+            --adep-red-dark: #b71c1c;
+            --adep-white: #ffffff;
+            --adep-bg: #f4f7f6;
+            --text-dark: #2c3e50;
+            --border-color: #d1d5db;
+            --card-bg: #ffffff;
+            --table-hover: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --adep-green: #00b068;
+            --adep-green-dark: #008751;
+            --adep-red: #f44336;
+            --adep-red-dark: #d32f2f;
+            --adep-white: #1e1e1e;
+            --adep-bg: #121212;
+            --text-dark: #e0e0e0;
+            --border-color: #333333;
+            --card-bg: #1e1e1e;
+            --table-hover: #2a2a2a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--adep-bg);
+            color: var(--text-dark);
+            padding-bottom: 3rem;
+            font-size: 16px;
+        }
+
+        /* Pantalla de Inicio de Sesión */
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--adep-bg);
+            padding: 1.5rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            padding: 2.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            border-top: 8px solid var(--adep-red);
+            border-bottom: 8px solid var(--adep-green);
+        }
+
+        .login-card img {
+            height: 90px;
+            width: auto;
+            margin-bottom: 1.2rem;
+        }
+
+        .login-card h2 {
+            color: var(--adep-green);
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card p {
+            color: var(--text-dark);
+            opacity: 0.8;
+            font-size: 1rem;
+            margin-bottom: 1.8rem;
+        }
+
+        #app-container {
+            display: none;
+        }
+
+        /* Encabezado */
+        .navbar {
+            background-color: var(--card-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-top: 6px solid var(--adep-red);
+            border-bottom: 6px solid var(--adep-green);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+
+        .logo {
+            height: 75px;
+            width: auto;
+        }
+
+        .navbar h1 {
+            font-size: 1.6rem;
+            color: var(--adep-green);
+            font-weight: 700;
+        }
+
+        .navbar p {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            opacity: 0.8;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .theme-toggle-btn {
+            background: none;
+            border: 2px solid var(--border-color);
+            color: var(--text-dark);
+            padding: 0.6rem 0.9rem;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .theme-toggle-btn:hover {
+            border-color: var(--adep-green);
+            color: var(--adep-green);
+            transform: rotate(15deg) scale(1.08);
+        }
+
+        .user-menu-wrapper {
+            position: relative;
+        }
+
+        .user-tag {
+            background-color: var(--adep-bg);
+            color: var(--adep-green);
+            padding: 0.75rem 1.2rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 700;
+            border: 2px solid var(--adep-green);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            transition: all 0.25s ease;
+        }
+        .user-tag:hover {
+            background-color: var(--adep-green);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 135, 81, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 125%;
+            background: var(--card-bg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            border-radius: 12px;
+            width: 210px;
+            overflow: hidden;
+            z-index: 100;
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 0.95rem 1.2rem;
+            font-size: 0.98rem;
+            color: var(--adep-red);
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+        .dropdown-item:hover {
+            background-color: var(--adep-red);
+            color: #ffffff;
+            padding-left: 1.5rem;
+        }
+        .dropdown-item:active {
+            transform: scale(0.96);
+        }
+
+        /* Modales */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            padding: 2.2rem 1.8rem;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border-top: 6px solid var(--adep-green);
+        }
+
+        .modal-card h3 {
+            color: var(--text-dark);
+            margin-bottom: 0.8rem;
+            font-size: 1.3rem;
+        }
+
+        .modal-card p {
+            color: var(--text-dark);
+            opacity: 0.85;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 2rem auto;
+            padding: 0 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Notificaciones fijas */
+        #notification-area {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .toast-banner {
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            color: #ffffff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        .toast-success { background-color: var(--adep-green); border-left: 8px solid var(--adep-green-dark); }
+        .toast-danger { background-color: var(--adep-red); border-left: 8px solid var(--adep-red-dark); }
+        .toast-warning { background-color: #334155; border-left: 8px solid var(--adep-green); }
+
+        .toast-close {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.3rem;
+            margin-left: 1rem;
+        }
+
+        /* Tarjetas de Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 8px solid var(--adep-green);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-red { border-left-color: var(--adep-red); }
+        .card-blue { border-left-color: #007bff; }
+        .card-orange { border-left-color: #ff9800; }
+
+        .card h3 {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            opacity: 0.7;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+        }
+
+        .metric-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+
+        .card-btn {
+            background-color: var(--adep-bg);
+            color: var(--adep-green);
+            border: 2px solid var(--adep-green);
+            padding: 0.5rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .card-btn:hover { background-color: var(--adep-green); color: #ffffff; transform: translateY(-2px); }
+
+        .card-red-btn { color: var(--adep-red); border-color: var(--adep-red); }
+        .card-red-btn:hover { background-color: var(--adep-red); color: #ffffff; }
+
+        .card-blue-btn { color: #007bff; border-color: #007bff; }
+        .card-blue-btn:hover { background-color: #007bff; color: #ffffff; }
+
+        .card-orange-btn { color: #e65100; border-color: #ff9800; }
+        .card-orange-btn:hover { background-color: #ff9800; color: #ffffff; }
+
+        .panel-section, .table-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: var(--adep-green);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.8rem;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .action-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            align-items: end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .input-group input, .input-group select {
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--adep-bg);
+            color: var(--text-dark);
+            border-radius: 8px;
+            outline: none;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            grid-column: 1 / -1;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.9rem 1.4rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            flex: 1;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-green { background-color: var(--adep-green); }
+        .btn-green:hover { background-color: var(--adep-green-dark); }
+        .btn-red { background-color: var(--adep-red); }
+        .btn-red:hover { background-color: var(--adep-red-dark); }
+        .btn-blue { background-color: #007bff; }
+        .btn-blue:hover { background-color: #0056b3; }
+        .btn-gray { background-color: #6c757d; }
+        .btn-gray:hover { background-color: #5a6268; }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--adep-green);
+            color: var(--adep-green);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .btn-outline:hover { background-color: rgba(0, 135, 81, 0.1); transform: translateY(-2px); }
+
+        .btn-outline-danger {
+            background-color: transparent;
+            border: 2px solid var(--adep-red);
+            color: var(--adep-red);
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-danger:hover { background-color: rgba(211, 47, 47, 0.1); transform: translateY(-2px); }
+
+        .btn-outline-primary {
+            background-color: transparent;
+            border: 2px solid #007bff;
+            color: #007bff;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .btn-outline-primary:hover { background-color: rgba(0, 123, 255, 0.1); transform: translateY(-2px); }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.8rem;
+            border: 1px solid var(--border-color);
+            background-color: var(--adep-bg);
+            color: var(--text-dark);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dark);
+            opacity: 0.6;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 520px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 850px;
+        }
+
+        th, td {
+            padding: 1.1rem 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
+        th {
+            background-color: var(--adep-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover td {
+            background-color: var(--table-hover);
+        }
+
+        .badge {
+            padding: 0.45rem 0.85rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .badge-disponible { background: rgba(0, 135, 81, 0.15); color: var(--adep-green); }
+        .badge-prestado { background: rgba(211, 47, 47, 0.15); color: var(--adep-red); }
+        .badge-vencido { background: #b71c1c; color: #ffffff; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .audit-list {
+            list-style: none;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .audit-item {
+            padding: 0.8rem 1rem;
+            border-left: 4px solid var(--adep-green);
+            background: var(--adep-bg);
+            margin-bottom: 0.6rem;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dark);
+        }
+        .audit-item.salida { border-left-color: var(--adep-red); }
+
+        @media (max-width: 900px) {
+            .action-form { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 1. PANTALLA DE INICIO DE SESIÓN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <img src="https://adepcr.org/wp-content/themes/bootstrap-4/img/logo.png" alt="Logo ADEP">
+            <h2>ADEP Ortopédicos</h2>
+            <p>Sistema de Control de Inventario</p>
+            <form onsubmit="iniciarSesion(event); return false;">
+                <div class="input-group" style="margin-bottom: 1.2rem; text-align: left;">
+                    <label for="usuario">Usuario / Operador</label>
+                    <input type="text" id="usuario" value="Operador Bodega" required>
+                </div>
+                <button type="submit" class="btn btn-green">
+                    <i class="fa-solid fa-right-to-bracket"></i> Ingresar al Sistema
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. APLICACIÓN PRINCIPAL -->
+    <div id="app-container">
+        <header class="navbar">
+            <div class="logo-container">
+                <img src="https://adepcr.org/wp-content/themes/bootstrap-4/img/logo.png" alt="Logo ADEP" class="logo">
+                <div>
+                    <h1>ADEP Ortopédicos</h1>
+                    <p>Asociación de Educadores Pensionados</p>
+                </div>
+            </div>
+            
+            <div class="nav-controls">
+                <button class="theme-toggle-btn" onclick="toggleTema()" title="Cambiar Tema Claro/Oscuro">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <div class="user-menu-wrapper">
+                    <div class="user-tag" onclick="toggleMenuSesion()">
+                        <i class="fa-solid fa-user-circle"></i> <span id="display-user">Operador</span> <i class="fa-solid fa-caret-down"></i>
+                    </div>
+                    <div id="dropdown-sesion" class="dropdown-menu">
+                        <button class="dropdown-item" onclick="mostrarModalCerrarSesion()">
+                            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <div id="notification-area"></div>
+
+            <!-- Tarjetas de Métricas -->
+            <section class="metrics-grid">
+                <div class="card card-green">
+                    <div>
+                        <h3><i class="fa-solid fa-boxes-stacked"></i> Disponibles</h3>
+                        <span id="total-disponibles" class="metric-number">0</span>
+                    </div>
+                    <button class="card-btn" onclick="filtrarPorEstado('Disponible')">
+                        <i class="fa-solid fa-eye"></i> Ver Detalles
+                    </button>
+                </div>
+
+                <div class="card card-red">
+                    <div>
+                        <h3><i class="fa-solid fa-hand-holding-medical"></i> Prestados</h3>
+                        <span id="total-prestados" class="metric-number">0</span>
+                    </div>
+                    <button class="card-btn card-red-btn" onclick="filtrarPorEstado('Prestado')">
+                        <i class="fa-solid fa-eye"></i> Ver Detalles
+                    </button>
+                </div>
+
+                <div class="card card-blue">
+                    <div>
+                        <h3><i class="fa-solid fa-tags"></i> Total Placas</h3>
+                        <span id="total-placas" class="metric-number">0</span>
+                    </div>
+                    <button class="card-btn card-blue-btn" onclick="mostrarTodoInventario()">
+                        <i class="fa-solid fa-eye"></i> Ver Detalles
+                    </button>
+                </div>
+
+                <div class="card card-orange">
+                    <div>
+                        <h3><i class="fa-solid fa-warehouse"></i> Bodegas Activas</h3>
+                        <span class="metric-number">4</span>
+                    </div>
+                    <button class="card-btn card-orange-btn" onclick="mostrarBodegasActivas()">
+                        <i class="fa-solid fa-eye"></i> Ver Detalles
+                    </button>
+                </div>
+            </section>
+
+            <!-- Formulario de Movimientos y Edición -->
+            <section class="panel-section">
+                <h2 id="form-title" class="section-title"><i class="fa-solid fa-arrow-right-arrow-left"></i> Registro de Movimientos y Placas</h2>
+                <form id="form-movimiento" class="action-form" onsubmit="event.preventDefault();">
+                    <input type="hidden" id="edit-index" value="-1">
+                    
+                    <div class="input-group">
+                        <label for="numero-placa">Número de Placa</label>
+                        <input type="text" id="numero-placa" placeholder="Ej. 11208 o 9725" oninput="filtrarEnTiempoReal()">
+                    </div>
+
+                    <!-- Equipo Ortopédico con opción OTRO -->
+                    <div class="input-group">
+                        <label for="tipo-equipo">Equipo Ortopédico</label>
+                        <select id="tipo-equipo" onchange="verificarEquipoOtro(); filtrarEnTiempoReal();">
+                            <option value="">Seleccione el tipo...</option>
+                            <option value="CATRES MANUALES">Catre Manual</option>
+                            <option value="CAMAS ELECTRICAS">Cama Eléctrica</option>
+                            <option value="BASTON 1 PUNTO">Bastón 1 Punto</option>
+                            <option value="BASTON 4 PTS">Bastón 4 Puntos</option>
+                            <option value="ANDADERAS PLEGABLES">Andadera Plegable</option>
+                            <option value="ANDADERA CON ASIENTO">Andadera con Asiento</option>
+                            <option value="Sillas de Rudas Corrientes">Silla de Ruedas Corriente</option>
+                            <option value="Sillas de Ruedas Obesos">Silla de Ruedas Obesos</option>
+                            <option value="Silla Inodoro Rodines">Silla Inodoro Rodines</option>
+                            <option value="Muletas Corrientes">Muletas Corrientes</option>
+                            <option value="BIDÉ">Bidé</option>
+                            <option value="OTRO">Otro (Especificar)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" id="grupo-equipo-custom" style="display: none; grid-column: 1 / -1;">
+                        <label for="equipo-custom">Especifique el equipo ortopédico</label>
+                        <input type="text" id="equipo-custom" placeholder="Ej. Colchón Antiescaras..." oninput="filtrarEnTiempoReal()">
+                    </div>
+
+                    <!-- Ubicación / Bodega con opción OTRO -->
+                    <div class="input-group">
+                        <label for="ubicacion-bodega">Ubicación / Bodega</label>
+                        <select id="ubicacion-bodega" onchange="verificarBodegaOtra(); filtrarEnTiempoReal();">
+                            <option value="">Seleccione la bodega...</option>
+                            <option value="Bodega 1 (Principal)">Bodega 1 (Principal)</option>
+                            <option value="Bodega 2 (Parqueo)">Bodega 2 (Parqueo - Transportes)</option>
+                            <option value="Bodega 3 (Planta Alta)">Bodega 3 (Planta Alta)</option>
+                            <option value="Bodega 4 (Filial San José)">Bodega 4 (Filial San José)</option>
+                            <option value="OTRA">Otra Ubicación / Bodega</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group" id="grupo-bodega-custom" style="display: none; grid-column: 1 / -1;">
+                        <label for="bodega-custom">Especifique el nombre de la bodega o ubicación</label>
+                        <input type="text" id="bodega-custom" placeholder="Ej. Recepción, Bodega 5..." oninput="filtrarEnTiempoReal()">
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" id="btn-prestar" onclick="abrirModalPrestar()" class="btn btn-red"><i class="fa-solid fa-minus-circle"></i> Prestar (Salida)</button>
+                        <button type="button" id="btn-ingresar-devolver" onclick="abrirOpcionesIngresoDevolucion()" class="btn btn-green"><i class="fa-solid fa-plus-circle"></i> Ingresar / Devolver</button>
+                        <button type="button" id="btn-cancelar-edicion" onclick="cancelarEdicion()" class="btn btn-gray" style="display: none;"><i class="fa-solid fa-xmark"></i> Cancelar Edición</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Tabla de Inventario Sincronizada -->
+            <section class="table-section">
+                <div class="table-header">
+                    <h2 class="section-title" style="border:none; margin:0;"><i class="fa-solid fa-list-check"></i> Inventario de Placas Sincronizado</h2>
+                    <div style="display: flex; gap: 0.8rem; align-items: center; flex-wrap: wrap;">
+                        <button class="btn-outline-danger" onclick="abrirModalReiniciar()"><i class="fa-solid fa-rotate-left"></i> Restablecer Estado Inicial</button>
+                        <button class="btn-outline" onclick="exportarExcelProfesional()"><i class="fa-solid fa-file-excel"></i> Descargar Reporte General</button>
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="table-search" onkeyup="filtrarTabla()" placeholder="Buscar placa, beneficiario...">
+                        </div>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="tabla-inventario">
+                        <thead>
+                            <tr>
+                                <th>N° Placa</th>
+                                <th>Equipo Ortopédico</th>
+                                <th>Bodega / Ubicación</th>
+                                <th>Estado Actual</th>
+                                <th>Beneficiario / Vencimiento</th>
+                                <th>Acción Rápida</th>
+                                <th>Gestión</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Auditoría Avanzada de Movimientos -->
+            <section class="panel-section">
+                <div class="section-title" style="border:none; margin-bottom:1rem;">
+                    <span><i class="fa-solid fa-shield-halved"></i> Registro de Auditoría y Trazabilidad</span>
+                    <button class="btn-outline" onclick="limpiarAuditoria()"><i class="fa-solid fa-trash-can"></i> Limpiar Registro</button>
+                </div>
+                <ul id="log-list" class="audit-list">
+                    <li class="audit-item"><span>Sistema inicializado correctamente con persistencia local.</span> <strong>Ahora</strong></li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL DATOS DE PRÉSTAMO -->
+    <div id="modal-prestar" class="modal-overlay">
+        <div class="modal-card" style="border-top-color: var(--adep-red);">
+            <h3><i class="fa-solid fa-hand-holding-medical"></i> Datos del Préstamo</h3>
+            <p>Complete la información requerida para formalizar la salida del equipo:</p>
+            
+            <div class="input-group" style="margin-bottom: 0.9rem; text-align: left;">
+                <label for="beneficiario-nombre">Nombre Completo <span style="color:var(--adep-red);">*</span></label>
+                <input type="text" id="beneficiario-nombre" placeholder="Nombre completo del afiliado" oninput="validarSoloLetras(this)">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 0.9rem; text-align: left;">
+                <label for="beneficiario-cedula">Cédula <span style="color:var(--adep-red);">*</span></label>
+                <input type="text" id="beneficiario-cedula" placeholder="Ej. 102340567" maxlength="9" oninput="validarSoloNumeros(this)">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 0.9rem; text-align: left;">
+                <label for="beneficiario-tel">Teléfono de Contacto <span style="font-weight: normal; opacity: 0.7; font-size: 0.9rem;">(Opcional)</span></label>
+                <input type="text" id="beneficiario-tel" placeholder="Ej. 8888-8888" maxlength="8" oninput="validarSoloNumeros(this)">
+            </div>
+
+            <div class="input-group" style="margin-bottom: 1.2rem; text-align: left;">
+                <label for="fecha-devolucion">Fecha Estimada de Devolución <span style="color:var(--adep-red);">*</span></label>
+                <input type="date" id="fecha-devolucion">
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn btn-gray" onclick="cerrarModalPrestar()">Cancelar</button>
+                <button class="btn btn-red" onclick="ejecutarSalidaConBeneficiario()">Confirmar Préstamo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CIERRE DE SESIÓN -->
+    <div id="modal-confirmacion" class="modal-overlay">
+        <div class="modal-card">
+            <h3>¿Cerrar Sesión?</h3>
+            <p style="text-align: center;">¿Estás seguro de que deseas salir del sistema actual?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-gray" onclick="cancelarCierreSesion()">Cancelar</button>
+                <button class="btn btn-red" onclick="confirmarCierreSesion()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA RESTABLECER INVENTARIO -->
+    <div id="modal-reiniciar" class="modal-overlay">
+        <div class="modal-card" style="border-top-color: var(--adep-red);">
+            <h3>¿Restablecer Estado Inicial?</h3>
+            <p style="text-align: center;">Esto borrará los datos actuales y restaurará el inventario predeterminado de fábrica.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-gray" onclick="cerrarModalReiniciar()">Cancelar</button>
+                <button class="btn btn-red" onclick="ejecutarReiniciarInventario()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA ELIMINAR REGISTRO -->
+    <div id="modal-eliminar" class="modal-overlay">
+        <div class="modal-card" style="border-top-color: var(--adep-red);">
+            <h3>¿Eliminar Registro?</h3>
+            <p id="modal-eliminar-texto" style="text-align: center;">¿Estás seguro de que deseas retirar esta placa del sistema?</p>
+            <div class="modal-buttons">
+                <button class="btn btn-gray" onclick="cerrarModalEliminar()">Cancelar</button>
+                <button class="btn btn-red" onclick="ejecutarEliminarPlaca()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SELECCIÓN INGRESO / DEVOLUCIÓN -->
+    <div id="modal-ingreso-devolucion" class="modal-overlay">
+        <div class="modal-card" style="border-top-color: var(--adep-green);">
+            <h3>Seleccionar Acción</h3>
+            <p style="text-align: center;" id="texto-modal-accion">¿Qué operación desea realizar con este equipo?</p>
+            <div id="contenedor-botones-accion" style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.5rem;">
+                <button id="btn-opcion-devolucion" class="btn btn-green" onclick="ejecutarAccionElegida('devolucion')"><i class="fa-solid fa-rotate-left"></i> Procesar Devolución</button>
+                <button id="btn-opcion-ingreso" class="btn btn-blue" onclick="ejecutarAccionElegida('ingreso')"><i class="fa-solid fa-plus-circle"></i> Registrar Nuevo Ingreso</button>
+            </div>
+            <button class="btn btn-gray" style="width: 100%;" onclick="cerrarModalIngresoDevolucion()">Cancelar</button>
+        </div>
+    </div>
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        let inventarioOriginal = [
+            { placa: "9725", equipo: "CATRES MANUALES", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9106", equipo: "CATRES MANUALES", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "7600", equipo: "CATRES MANUALES", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9213", equipo: "CATRES MANUALES", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9114", equipo: "CATRES MANUALES", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9099", equipo: "Sillas de Rudas Corrientes", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "8935", equipo: "Sillas de Rudas Corrientes", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "11208", equipo: "BASTON 1 PUNTO", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "11207", equipo: "BASTON 1 PUNTO", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9318", equipo: "BASTON 4 PTS", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9704", equipo: "ANDADERA CON ASIENTO", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "000150", equipo: "CAMAS ELECTRICAS", bodega: "Bodega 1 (Principal)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" },
+            { placa: "9700", equipo: "ANDADERA CON ASIENTO", bodega: "Bodega 4 (Filial San José)", estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" }
+        ];
+
+        let inventario = JSON.parse(localStorage.getItem("adep_inventario")) || JSON.parse(JSON.stringify(inventarioOriginal));
+        let auditoria = JSON.parse(localStorage.getItem("adep_auditoria")) || [];
+        let indexParaEliminar = -1;
+        let operadorActual = "Operador Bodega";
+
+        function guardarDatosLocal() {
+            localStorage.setItem("adep_inventario", JSON.stringify(inventario));
+            localStorage.setItem("adep_auditoria", JSON.stringify(auditoria));
+        }
+
+        function validarSoloNumeros(input) {
+            input.value = input.value.replace(/[^0-9]/g, '');
+        }
+
+        function validarSoloLetras(input) {
+            input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ ]/g, '');
+        }
+
+        // TEMA CLARO / OSCURO
+        function toggleTema() {
+            const currentTheme = document.documentElement.getAttribute("data-theme");
+            const newTheme = currentTheme === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", newTheme);
+            document.getElementById("theme-icon").className = newTheme === "dark" ? "fa-solid fa-sun" : "fa-solid fa-moon";
+            localStorage.setItem("adep_theme", newTheme);
+        }
+
+        if (localStorage.getItem("adep_theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+            document.getElementById("theme-icon").className = "fa-solid fa-sun";
+        }
+
+        function limpiarNotificaciones() {
+            const container = document.getElementById("notification-area");
+            if (container) container.innerHTML = "";
+        }
+
+        function iniciarSesion(e) {
+            e.preventDefault();
+            limpiarNotificaciones();
+            operadorActual = document.getElementById("usuario").value.trim() || "Operador Bodega";
+            document.getElementById("display-user").textContent = operadorActual;
+            document.getElementById("login-screen").style.display = "none";
+            document.getElementById("app-container").style.display = "block";
+            actualizarTabla();
+            actualizarMétricas();
+            actualizarAuditoriaUI();
+            mostrarNotificacion(`Bienvenido al sistema, ${operadorActual}.`, "success");
+        }
+
+        function toggleMenuSesion() { document.getElementById("dropdown-sesion").classList.toggle("show"); }
+        function mostrarModalCerrarSesion() { toggleMenuSesion(); document.getElementById("modal-confirmacion").style.display = "flex"; }
+        function cancelarCierreSesion() { document.getElementById("modal-confirmacion").style.display = "none"; }
+        
+        function confirmarCierreSesion() {
+            document.getElementById("modal-confirmacion").style.display = "none";
+            mostrarNotificacion("Sesión cerrada correctamente.", "warning");
+            setTimeout(() => {
+                document.getElementById("app-container").style.display = "none";
+                document.getElementById("login-screen").style.display = "flex";
+                document.getElementById("form-movimiento").reset();
+                cancelarEdicion();
+                limpiarNotificaciones();
+            }, 1000); 
+        }
+
+        function abrirModalReiniciar() { document.getElementById("modal-reiniciar").style.display = "flex"; }
+        function cerrarModalReiniciar() { document.getElementById("modal-reiniciar").style.display = "none"; }
+        
+        function ejecutarReiniciarInventario() {
+            cerrarModalReiniciar();
+            inventario = JSON.parse(JSON.stringify(inventarioOriginal));
+            auditoria = [];
+            guardarDatosLocal();
+            cancelarEdicion();
+            actualizarTabla();
+            actualizarMétricas();
+            actualizarAuditoriaUI();
+            mostrarNotificacion("¡Inventario restablecido a su estado de fábrica!", "success");
+            agregarAuditoria("Sistema restablecido al estado original por fábrica.");
+        }
+
+        function verificarEquipoOtro() {
+            const select = document.getElementById("tipo-equipo");
+            const customGroup = document.getElementById("grupo-equipo-custom");
+            if (select.value === "OTRO") {
+                customGroup.style.display = "flex";
+                document.getElementById("equipo-custom").required = true;
+            } else {
+                customGroup.style.display = "none";
+                document.getElementById("equipo-custom").required = false;
+                document.getElementById("equipo-custom").value = "";
+            }
+        }
+
+        function verificarBodegaOtra() {
+            const select = document.getElementById("ubicacion-bodega");
+            const customGroup = document.getElementById("grupo-bodega-custom");
+            if (select.value === "OTRA") {
+                customGroup.style.display = "flex";
+                document.getElementById("bodega-custom").required = true;
+            } else {
+                customGroup.style.display = "none";
+                document.getElementById("bodega-custom").required = false;
+                document.getElementById("bodega-custom").value = "";
+            }
+        }
+
+        function obtenerEquipoSeleccionado() {
+            const select = document.getElementById("tipo-equipo").value;
+            if (select === "") return "";
+            if (select === "OTRO") return document.getElementById("equipo-custom").value.trim().toUpperCase();
+            return select;
+        }
+
+        function obtenerBodegaSeleccionada() {
+            const select = document.getElementById("ubicacion-bodega").value;
+            if (select === "") return "";
+            if (select === "OTRA") return document.getElementById("bodega-custom").value.trim();
+            return select;
+        }
+
+        // VALIDACIÓN LÓGICA DE PRÉSTAMO
+        function abrirModalPrestar() {
+            const placa = document.getElementById("numero-placa").value.trim();
+            const equipo = obtenerEquipoSeleccionado();
+            const bodega = obtenerBodegaSeleccionada();
+
+            if (!placa || !equipo || !bodega) {
+                mostrarNotificacion("Atención: Debe completar los tres campos (Número de placa, equipo y bodega) para procesar un préstamo.", "warning");
+                return;
+            }
+
+            const itemPorPlaca = inventario.find(i => i.placa === placa && i.equipo.toLowerCase() === equipo.toLowerCase() && i.bodega.toLowerCase() === bodega.toLowerCase());
+            
+            if (!itemPorPlaca) {
+                mostrarNotificacion(`Error lógico: La placa #${placa} con este equipo y ubicación no está registrada en el sistema. Debe registrarla primero usando "Ingresar / Devolver".`, "danger");
+                return;
+            }
+
+            if (itemPorPlaca.estado === "Prestado") {
+                mostrarNotificacion(`La placa #${placa} ya se encuentra registrada como prestada.`, "warning");
+                return;
+            }
+
+            document.getElementById("beneficiario-nombre").value = "";
+            document.getElementById("beneficiario-cedula").value = "";
+            document.getElementById("beneficiario-tel").value = "";
+            document.getElementById("fecha-devolucion").value = "";
+            document.getElementById("modal-prestar").style.display = "flex";
+        }
+
+        function cerrarModalPrestar() {
+            document.getElementById("modal-prestar").style.display = "none";
+        }
+
+        function ejecutarSalidaConBeneficiario() {
+            const placa = document.getElementById("numero-placa").value.trim();
+            const beneficiario = document.getElementById("beneficiario-nombre").value.trim();
+            const cedula = document.getElementById("beneficiario-cedula").value.trim();
+            let telefono = document.getElementById("beneficiario-tel").value.trim();
+            const fechaDevolucion = document.getElementById("fecha-devolucion").value;
+
+            if (!beneficiario) {
+                mostrarNotificacion("Error: Debe ingresar el nombre completo.", "danger");
+                return;
+            }
+            if (cedula.length !== 9) {
+                mostrarNotificacion("Error de validación: La cédula debe contener exactamente 9 dígitos. Inténtelo de nuevo.", "danger");
+                return;
+            }
+            // Validación de teléfono: Es opcional, pero si se escribe algo, debe tener exactamente 8 dígitos
+            if (telefono !== "" && telefono.length !== 8) {
+                mostrarNotificacion("Error de validación: El teléfono debe contener exactamente 8 dígitos. Inténtelo de nuevo.", "danger");
+                return;
+            }
+            if (!fechaDevolucion) {
+                mostrarNotificacion("Error: Debe seleccionar una fecha estimada de devolución.", "danger");
+                return;
+            }
+
+            if (telefono === "") {
+                telefono = "N/A";
+            }
+
+            const equipo = obtenerEquipoSeleccionado();
+            const bodega = obtenerBodegaSeleccionada();
+            const item = inventario.find(i => i.placa === placa && i.equipo.toLowerCase() === equipo.toLowerCase() && i.bodega.toLowerCase() === bodega.toLowerCase());
+            
+            if (item) {
+                item.estado = "Prestado";
+                item.beneficiario = beneficiario;
+                item.cedula = cedula;
+                item.telefono = telefono;
+                item.fechaDevolucion = fechaDevolucion;
+                guardarDatosLocal();
+                cerrarModalPrestar();
+                mostrarNotificacion(`¡Préstamo registrado con éxito a nombre de ${beneficiario}!`, "success");
+                agregarAuditoria(`Préstamo de placa #${placa} (${item.equipo}) a ${beneficiario} (Cédula: ${cedula})`, true);
+                cancelarEdicion();
+                actualizarTabla();
+                actualizarMétricas();
+            }
+        }
+
+        // VALIDACIÓN ESTRICTA PARA INGRESO Y DEVOLUCIÓN
+        function abrirOpcionesIngresoDevolucion() {
+            const placa = document.getElementById("numero-placa").value.trim();
+            const equipo = obtenerEquipoSeleccionado();
+            const bodega = obtenerBodegaSeleccionada();
+
+            if (!placa) {
+                mostrarNotificacion("Atención: Debe ingresar al menos el número de placa obligatoriamente.", "warning");
+                return;
+            }
+
+            const editIndex = parseInt(document.getElementById("edit-index").value);
+            if (editIndex > -1) {
+                procesarIngresoOdevolucion('guardar_edicion');
+                return;
+            }
+
+            const btnDevolucion = document.getElementById("btn-opcion-devolucion");
+            const btnIngreso = document.getElementById("btn-opcion-ingreso");
+            const textoModal = document.getElementById("texto-modal-accion");
+
+            const itemExacto = inventario.find(i => i.placa === placa && equipo && bodega && i.equipo.toLowerCase() === equipo.toLowerCase() && i.bodega.toLowerCase() === bodega.toLowerCase());
+            const existePlacaGeneral = inventario.some(i => i.placa === placa);
+
+            if (!existePlacaGeneral) {
+                if (!equipo || !bodega) {
+                    mostrarNotificacion("Para registrar un nuevo ingreso debe completar el equipo y la bodega obligatoriamente.", "warning");
+                    return;
+                }
+                btnDevolucion.style.display = "none";
+                btnIngreso.style.display = "flex";
+                textoModal.innerHTML = `La placa <strong>#${placa}</strong> no está registrada. ¿Desea registrarla como un nuevo ingreso?`;
+            } else {
+                if (itemExacto) {
+                    if (itemExacto.estado === "Prestado") {
+                        btnIngreso.style.display = "none";
+                        btnDevolucion.style.display = "flex";
+                        textoModal.innerHTML = `La placa <strong>#${placa}</strong> con estos datos ya está registrada y se encuentra Prestada. ¿Desea procesar su Devolución?`;
+                    } else {
+                        mostrarNotificacion(`La placa #${placa} ya está registrada y se encuentra DISPONIBLE. No se puede procesar ninguna devolución.`, "warning");
+                        return;
+                    }
+                } else {
+                    if (equipo && bodega) {
+                        btnDevolucion.style.display = "none";
+                        btnIngreso.style.display = "flex";
+                        textoModal.innerHTML = `La placa #${placa} existe con otros datos. ¿Desea registrar esta nueva variante como ingreso?`;
+                    } else {
+                        mostrarNotificacion("Debe seleccionar el equipo y la bodega para gestionar esta placa.", "warning");
+                        return;
+                    }
+                }
+            }
+
+            document.getElementById("modal-ingreso-devolucion").style.display = "flex";
+        }
+
+        function cerrarModalIngresoDevolucion() {
+            document.getElementById("modal-ingreso-devolucion").style.display = "none";
+        }
+
+        function ejecutarAccionElegida(tipo) {
+            cerrarModalIngresoDevolucion();
+            procesarIngresoOdevolucion(tipo);
+        }
+
+        function procesarIngresoOdevolucion(tipoAccion) {
+            const placa = document.getElementById("numero-placa").value.trim();
+            const equipo = obtenerEquipoSeleccionado();
+            const bodega = obtenerBodegaSeleccionada();
+            const editIndex = parseInt(document.getElementById("edit-index").value);
+
+            if (editIndex > -1 || tipoAccion === 'guardar_edicion') {
+                const indiceReal = editIndex > -1 ? editIndex : 0;
+                inventario[indiceReal].placa = placa;
+                inventario[indiceReal].equipo = equipo;
+                inventario[indiceReal].bodega = bodega;
+                guardarDatosLocal();
+                mostrarNotificacion(`¡Registro actualizado con éxito para la placa #${placa}!`, "success");
+                agregarAuditoria(`Modificación de registro: Placa #${placa}`);
+                cancelarEdicion();
+                actualizarTabla();
+                actualizarMétricas();
+                return;
+            }
+
+            if (tipoAccion === 'devolucion') {
+                const itemExistente = inventario.find(i => i.placa === placa && (!equipo || i.equipo.toLowerCase() === equipo.toLowerCase()) && (!bodega || i.bodega.toLowerCase() === bodega.toLowerCase()));
+                if (!itemExistente) {
+                    mostrarNotificacion(`No se puede procesar devolución: No hay registro válido para la placa #${placa}.`, "danger");
+                    return;
+                }
+                itemExistente.estado = "Disponible";
+                if (bodega) itemExistente.bodega = bodega;
+                if (equipo) itemExistente.equipo = equipo;
+                itemExistente.beneficiario = "";
+                itemExistente.cedula = "";
+                itemExistente.telefono = "";
+                itemExistente.fechaDevolucion = "";
+                guardarDatosLocal();
+                mostrarNotificacion(`¡Devolución exitosa! Placa <strong>${placa}</strong> disponible.`, "success");
+                agregarAuditoria(`Devolución de placa #${placa}`);
+            } else if (tipoAccion === 'ingreso') {
+                if (!equipo || !bodega) {
+                    mostrarNotificacion("Para registrar un nuevo ingreso debe seleccionar obligatoriamente el equipo y la bodega.", "warning");
+                    return;
+                }
+                const duplicadoExacto = inventario.some(i => i.placa === placa && i.equipo.toLowerCase() === equipo.toLowerCase() && i.bodega.toLowerCase() === bodega.toLowerCase());
+                if (duplicadoExacto) {
+                    mostrarNotificacion("Error: Esta información ya está registrada en el sistema.", "danger");
+                    return;
+                }
+
+                inventario.unshift({ placa, equipo, bodega, estado: "Disponible", beneficiario: "", cedula: "", telefono: "", fechaDevolucion: "" });
+                guardarDatosLocal();
+                mostrarNotificacion(`¡Ingreso registrado! Nueva placa <strong>${placa}</strong> (${equipo}).`, "success");
+                agregarAuditoria(`Nuevo ingreso de placa #${placa} (${equipo})`);
+            }
+
+            cancelarEdicion();
+            actualizarTabla();
+            actualizarMétricas();
+        }
+
+        function abrirModalEliminar(index) {
+            indexParaEliminar = index;
+            const item = inventario[index];
+            document.getElementById("modal-eliminar-texto").innerHTML = `¿Desea retirar del sistema la placa <strong>#${item.placa}</strong> (${item.equipo})?`;
+            document.getElementById("modal-eliminar").style.display = "flex";
+        }
+
+        function cerrarModalEliminar() {
+            document.getElementById("modal-eliminar").style.display = "none";
+            indexParaEliminar = -1;
+        }
+
+        function ejecutarEliminarPlaca() {
+            if (indexParaEliminar > -1) {
+                const itemEliminado = inventario[indexParaEliminar];
+                inventario.splice(indexParaEliminar, 1);
+                guardarDatosLocal();
+                cerrarModalEliminar();
+                cancelarEdicion();
+                actualizarTabla();
+                actualizarMétricas();
+                mostrarNotificacion(`Registro eliminado: Placa #${itemEliminado.placa} retirada.`, "danger");
+                agregarAuditoria(`Placa #${itemEliminado.placa} eliminada del sistema.`, true);
+            }
+        }
+
+        function cargarDatosParaEditar(index) {
+            const item = inventario[index];
+            document.getElementById("edit-index").value = index;
+            document.getElementById("numero-placa").value = item.placa;
+
+            const selectEquipo = document.getElementById("tipo-equipo");
+            let encontradoEquipo = Array.from(selectEquipo.options).some(opt => opt.value === item.equipo);
+            if (!encontradoEquipo) {
+                selectEquipo.value = "OTRO";
+                verificarEquipoOtro();
+                document.getElementById("equipo-custom").value = item.equipo;
+            } else {
+                selectEquipo.value = item.equipo;
+                verificarEquipoOtro();
+            }
+
+            const selectBodega = document.getElementById("ubicacion-bodega");
+            let encontradaBodega = Array.from(selectBodega.options).some(opt => opt.value === item.bodega);
+            if (!encontradaBodega) {
+                selectBodega.value = "OTRA";
+                verificarBodegaOtra();
+                document.getElementById("bodega-custom").value = item.bodega;
+            } else {
+                selectBodega.value = item.bodega;
+                verificarBodegaOtra();
+            }
+
+            document.getElementById("form-title").innerHTML = `<i class="fa-solid fa-pen-to-square" style="color: #007bff;"></i> Editando Registro (Placa #${item.placa})`;
+            document.getElementById("btn-prestar").style.display = "none";
+            document.getElementById("btn-ingresar-devolver").className = "btn btn-blue";
+            document.getElementById("btn-ingresar-devolver").innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios`;
+            document.getElementById("btn-cancelar-edicion").style.display = "inline-flex";
+
+            window.scrollTo({ top: 200, behavior: 'smooth' });
+            mostrarNotificacion(`Modo edición activo para la placa #${item.placa}.`, "warning");
+        }
+
+        function cancelarEdicion() {
+            document.getElementById("edit-index").value = "-1";
+            document.getElementById("form-movimiento").reset();
+            verificarEquipoOtro();
+            verificarBodegaOtra();
+            document.getElementById("form-title").innerHTML = `<i class="fa-solid fa-arrow-right-arrow-left"></i> Registro de Movimientos y Placas`;
+            document.getElementById("btn-prestar").style.display = "inline-flex";
+            document.getElementById("btn-ingresar-devolver").className = "btn btn-green";
+            document.getElementById("btn-ingresar-devolver").innerHTML = `<i class="fa-solid fa-plus-circle"></i> Ingresar / Devolver`;
+            document.getElementById("btn-cancelar-edicion").style.display = "none";
+            actualizarTabla(inventario);
+        }
+
+        function agregarAuditoria(mensaje, esSalida = false) {
+            const hora = new Date().toLocaleString();
+            auditoria.unshift({ texto: `[${operadorActual}] ${mensaje}`, hora, esSalida });
+            if (auditoria.length > 50) auditoria.pop();
+            guardarDatosLocal();
+            actualizarAuditoriaUI();
+        }
+
+        function actualizarAuditoriaUI() {
+            const logList = document.getElementById("log-list");
+            logList.innerHTML = "";
+            if (auditoria.length === 0) {
+                logList.innerHTML = `<li class="audit-item"><span>No hay registros recientes en la auditoría.</span> <strong>Ahora</strong></li>`;
+                return;
+            }
+            auditoria.forEach(item => {
+                const li = document.createElement("li");
+                li.className = `audit-item ${item.esSalida ? 'salida' : ''}`;
+                li.innerHTML = `<span>${item.texto}</span> <strong>${item.hora}</strong>`;
+                logList.appendChild(li);
+            });
+        }
+
+        function limpiarAuditoria() {
+            auditoria = [];
+            guardarDatosLocal();
+            actualizarAuditoriaUI();
+            mostrarNotificacion("Se ha limpiado el registro de auditoría.", "success");
+        }
+
+        function mostrarNotificacion(mensaje, tipo) {
+            const container = document.getElementById("notification-area");
+            const toast = document.createElement("div");
+            toast.className = `toast-banner toast-${tipo}`;
+            let icono = tipo === 'success' ? 'fa-check-circle' : (tipo === 'danger' ? 'fa-circle-exclamation' : 'fa-info-circle');
+            toast.innerHTML = `<span><i class="fa-solid ${icono}"></i> ${mensaje}</span><button class="toast-close" onclick="this.parentElement.remove()">&times;</button>`;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+        }
+
+        function actualizarMétricas() {
+            const disponibles = inventario.filter(item => item.estado === "Disponible").length;
+            const prestados = inventario.filter(item => item.estado === "Prestado").length;
+            document.getElementById("total-disponibles").textContent = disponibles;
+            document.getElementById("total-prestados").textContent = prestados;
+            document.getElementById("total-placas").textContent = inventario.length;
+        }
+
+        function actualizarTabla(datos = inventario) {
+            const tbody = document.getElementById("inventory-body");
+            tbody.innerHTML = "";
+
+            if (datos.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #757575; padding: 2rem;"><i class="fa-solid fa-triangle-exclamation"></i> No hay equipos disponibles o registrados con esos criterios.</td></tr>`;
+                return;
+            }
+
+            const hoy = new Date().toISOString().split('T')[0];
+
+            datos.forEach((item) => {
+                const globalIndex = inventario.findIndex(i => i === item);
+                let badgeEstado = item.estado === 'Disponible' ? '<span class="badge badge-disponible">Disponible</span>' : '<span class="badge badge-prestado">Prestado</span>';
+                
+                let infoBeneficiario = "-";
+                if (item.estado === 'Prestado') {
+                    let vencido = item.fechaDevolucion && item.fechaDevolucion < hoy;
+                    if (vencido) {
+                        badgeEstado = '<span class="badge badge-vencido">¡VENCIDO!</span>';
+                    }
+                    infoBeneficiario = `<strong>${item.beneficiario || 'Sin nombre'}</strong><br><small><i class="fa-solid fa-id-card"></i> Céd: ${item.cedula || 'N/A'} | <i class="fa-solid fa-phone"></i> ${item.telefono || 'N/A'}<br><i class="fa-solid fa-calendar"></i> Dev: ${item.fechaDevolucion || 'N/A'}</small>`;
+                }
+
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td><strong>${item.placa}</strong></td>
+                    <td>${item.equipo}</td>
+                    <td>${item.bodega}</td>
+                    <td>${badgeEstado}</td>
+                    <td>${infoBeneficiario}</td>
+                    <td>
+                        <button class="btn ${item.estado === 'Disponible' ? 'btn-red' : 'btn-green'}" style="padding: 0.4rem 0.75rem; font-size: 0.82rem;" onclick="cambiarEstadoDirecto(${globalIndex})">
+                            ${item.estado === 'Disponible' ? '<i class="fa-solid fa-hand-holding"></i> Prestar' : '<i class="fa-solid fa-rotate-left"></i> Devolver'}
+                        </button>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                            <button class="btn-outline-primary" onclick="cargarDatosParaEditar(${globalIndex})"><i class="fa-solid fa-pen"></i> Editar</button>
+                            <button class="btn-outline-danger" onclick="abrirModalEliminar(${globalIndex})"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // FILTRADO EN TIEMPO REAL
+        function filtrarEnTiempoReal() {
+            const editIndex = parseInt(document.getElementById("edit-index").value);
+            if (editIndex > -1) return;
+
+            const placaVal = document.getElementById("numero-placa").value.trim().toLowerCase();
+            const equipoVal = obtenerEquipoSeleccionado().toLowerCase();
+            const bodegaVal = obtenerBodegaSeleccionada().toLowerCase();
+
+            if (!placaVal && !equipoVal && !bodegaVal) {
+                actualizarTabla(inventario);
+                return;
+            }
+
+            const resultados = inventario.filter(item => {
+                const matchPlaca = placaVal === "" || item.placa.toLowerCase().includes(placaVal);
+                const matchEquipo = equipoVal === "" || item.equipo.toLowerCase().includes(equipoVal);
+                const matchBodega = bodegaVal === "" || item.bodega.toLowerCase().includes(bodegaVal);
+                
+                return matchPlaca && matchEquipo && matchBodega;
+            });
+
+            actualizarTabla(resultados);
+        }
+
+        function filtrarPorEstado(estado) {
+            cancelarEdicion();
+            const filtrados = inventario.filter(i => i.estado === estado);
+            actualizarTabla(filtrados);
+            mostrarNotificacion(`Mostrando detalle de equipos: ${estado}`, "warning");
+        }
+
+        function mostrarTodoInventario() {
+            cancelarEdicion();
+            actualizarTabla(inventario);
+            mostrarNotificacion("Mostrando listado completo de todas las placas.", "warning");
+        }
+
+        function mostrarBodegasActivas() {
+            cancelarEdicion();
+            actualizarTabla(inventario);
+            mostrarNotificacion("Mostrando detalle general organizado por Bodegas Activas.", "warning");
+        }
+
+        function cambiarEstadoDirecto(index) {
+            cancelarEdicion();
+            const item = inventario[index];
+            if (item.estado === "Disponible") {
+                document.getElementById("numero-placa").value = item.placa;
+
+                const selectEquipo = document.getElementById("tipo-equipo");
+                let encontradoEquipo = Array.from(selectEquipo.options).some(opt => opt.value === item.equipo);
+                if (!encontradoEquipo) {
+                    selectEquipo.value = "OTRO";
+                    verificarEquipoOtro();
+                    document.getElementById("equipo-custom").value = item.equipo;
+                } else {
+                    selectEquipo.value = item.equipo;
+                    verificarEquipoOtro();
+                }
+
+                const selectBodega = document.getElementById("ubicacion-bodega");
+                let encontradaBodega = Array.from(selectBodega.options).some(opt => opt.value === item.bodega);
+                if (!encontradaBodega) {
+                    selectBodega.value = "OTRA";
+                    verificarBodegaOtra();
+                    document.getElementById("bodega-custom").value = item.bodega;
+                } else {
+                    selectBodega.value = item.bodega;
+                    verificarBodegaOtra();
+                }
+
+                abrirModalPrestar();
+            } else {
+                item.estado = "Disponible";
+                item.beneficiario = "";
+                item.cedula = "";
+                item.telefono = "";
+                item.fechaDevolucion = "";
+                guardarDatosLocal();
+                mostrarNotificacion(`Devolución registrada para la placa #${item.placa}`, "success");
+                agregarAuditoria(`Devolución directa de placa #${item.placa}`);
+                actualizarTabla();
+                actualizarMétricas();
+            }
+        }
+
+        function filtrarTabla() {
+            const query = document.getElementById("table-search").value.toLowerCase();
+            const filas = document.querySelectorAll("#inventory-body tr");
+            filas.forEach(fila => {
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(query) ? "" : "none";
+            });
+        }
+
+        function exportarExcelProfesional() {
+            let datosExportar = inventario.map(item => ({
+                "N° Placa": item.placa,
+                "Equipo Ortopédico": item.equipo,
+                "Ubicación / Bodega": item.bodega,
+                "Estado Actual": item.estado,
+                "Beneficiario": item.beneficiario || "N/A",
+                "Cédula": item.cedula || "N/A",
+                "Teléfono": item.telefono || "N/A",
+                "Fecha Devolución": item.fechaDevolucion || "N/A"
+            }));
+
+            const totalDisponibles = inventario.filter(i => i.estado === "Disponible").length;
+            const totalPrestados = inventario.filter(i => i.estado === "Prestado").length;
+            const totalGeneral = inventario.length;
+
+            datosExportar.push({ "N° Placa": "", "Equipo Ortopédico": "", "Ubicación / Bodega": "", "Estado Actual": "", "Beneficiario": "", "Cédula": "", "Teléfono": "", "Fecha Devolución": "" });
+            datosExportar.push({ "N° Placa": "=== RESUMEN GENERAL ===", "Equipo Ortopédico": "", "Ubicación / Bodega": "", "Estado Actual": "", "Beneficiario": "", "Cédula": "", "Teléfono": "", "Fecha Devolución": "" });
+            datosExportar.push({ "N° Placa": "Total Placas Registradas:", "Equipo Ortopédico": totalGeneral, "Ubicación / Bodega": "", "Estado Actual": "", "Beneficiario": "", "Cédula": "", "Teléfono": "", "Fecha Devolución": "" });
+            datosExportar.push({ "N° Placa": "Total Equipos Disponibles:", "Equipo Ortopédico": totalDisponibles, "Ubicación / Bodega": "", "Estado Actual": "", "Beneficiario": "", "Cédula": "", "Teléfono": "", "Fecha Devolución": "" });
+            datosExportar.push({ "N° Placa": "Total Equipos Prestados:", "Equipo Ortopédico": totalPrestados, "Ubicación / Bodega": "", "Estado Actual": "", "Beneficiario": "", "Cédula": "", "Teléfono": "", "Fecha Devolución": "" });
+
+            let worksheet = XLSX.utils.json_to_sheet(datosExportar);
+
+            worksheet['!cols'] = [
+                { wch: 18 }, { wch: 28 }, { wch: 25 }, { wch: 16 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 18 }
+            ];
+
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario ADEP");
+
+            XLSX.writeFile(workbook, "Inventario_ADEP_Ortopedicos_Actualizado.xlsx");
+            mostrarNotificacion("¡Reporte general exportado correctamente a Excel!", "success");
+            agregarAuditoria("Reporte general exportado por el operador.");
+        }
+
+        actualizarAuditoriaUI();
+    </script>
+</body>
+</html>
